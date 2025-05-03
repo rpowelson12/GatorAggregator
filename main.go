@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"github.com/rpowelson12/GatorAggregator/internal/config"
 	"log"
+	"os"
+
+	"github.com/rpowelson12/GatorAggregator/internal/config"
 )
 
 func main() {
@@ -12,16 +13,24 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error reading file: %v", err)
 	}
-	// 2. Set the current user
-	err = cfg.SetUser("Randy")
-	if err != nil {
-		log.Fatalf("Error setting user: %v", err)
+	cfgState := state{&cfg}
+	commandList := newCommands()
+
+	commandList.register("login", handlerLogin)
+
+	if len(os.Args) < 2 {
+		log.Fatal("error with input")
 	}
-	// 3. Read the config file again
-	updatedCfg, err := config.Read()
-	if err != nil {
-		log.Fatalf("Error updating config: %v", err)
+	commandName := os.Args[1]
+	commandArgs := os.Args[2:]
+
+	cmd := command{
+		name: commandName,
+		args: commandArgs,
 	}
-	// 4. Print the contents
-	fmt.Printf("%+v", updatedCfg)
+
+	err = commandList.run(&cfgState, cmd)
+	if err != nil {
+		log.Fatalf("Error running command: %v", err)
+	}
 }
