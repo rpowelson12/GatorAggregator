@@ -38,19 +38,24 @@ func Read() (Config, error) {
 }
 
 func write(cfg Config) error {
-	// 1. Marshal the Config to JSON
-	json, err := json.Marshal(cfg)
+	fullPath, err := getConfigFilePath()
 	if err != nil {
 		return err
 	}
 
-	// 2. Get the config file path
-	configPath, err := getConfigFilePath()
+	file, err := os.Create(fullPath)
 	if err != nil {
 		return err
 	}
-	// 3. Write the JSON to the file
-	return os.WriteFile(configPath, json, 0644)
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	err = encoder.Encode(cfg)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Config) SetUser(username string) error {
